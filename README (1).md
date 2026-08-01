@@ -1,148 +1,256 @@
-# Real-Time Context-Aware Text Classification & Live Stream Routing
+# 🚀 Real-Time Context-Aware Text Classification & Live Stream Routing
 
-An automated message routing system that classifies unstructured, high-velocity
-customer feedback and routes each message to the right team in real time — with
-priority scoring layered on top of the raw category, not just a static lookup table.
+An intelligent machine learning system that classifies customer feedback into the correct department and routes each message in real time while assigning dynamic priority levels based on the message context.
 
-## Overview
+---
 
-Customer support teams receive feedback through many channels at high volume.
-Manually reading and forwarding every message to the right department is slow and
-error-prone. This project builds an end-to-end pipeline that:
+## 📖 Project Overview
 
-1. Learns a language representation of incoming feedback text.
-2. Classifies each message into one of five categories.
-3. Scores **priority** using both the category and the urgency language in the
-   message itself (context-aware, not just a fixed rule per category).
-4. Simulates a **live stream** of incoming messages, classifying and routing each
-   one the instant it "arrives," then reports a routing dashboard.
+Customer support teams receive thousands of customer messages every day through emails, chats, websites, and mobile applications.
 
-## Dataset
+Reading and forwarding every message manually takes time and often leads to delays.
 
-`customer_feedback.csv` — 1,000 customer feedback messages, evenly split across five
-categories (200 each), with no missing values:
+This project automates the entire workflow using Machine Learning.
 
-| Category | Routed To |
-|---|---|
-| Billing | Finance Team |
-| Delivery | Logistics Team |
-| Product | Quality Assurance Team |
-| Technical Support | IT Support Team |
-| General Inquiry | Customer Care Team |
+The system:
 
-## Pipeline
+- Reads customer feedback
+- Predicts the feedback category
+- Detects urgency
+- Assigns a priority
+- Routes the message to the correct department
+- Simulates a real-time message stream
 
-### 1. Data exploration
-Class balance check, message length distribution, and per-category word clouds to
-understand the vocabulary that separates each category.
+---
 
-### 2. Text preprocessing
-Light normalization only — lowercasing and whitespace/punctuation cleanup — since the
-feedback is already short, clean natural language. Heavy stemming or stopword removal
-would strip out useful signal like negations ("not working") or order IDs.
+## 🎯 Objectives
 
-### 3. Feature engineering
-**TF-IDF** over unigrams + bigrams (instead of a raw word-count vectorizer). TF-IDF
-down-weights common words and up-weights category-distinctive ones, and bigrams
-capture short phrases ("payment failed", "not working") instead of isolated words.
+- Automatically classify customer feedback
+- Route messages to the correct department
+- Detect urgent customer issues
+- Simulate real-time message processing
+- Save the trained model for deployment
 
-### 4. Model training & comparison
-Three classifiers are trained on the same TF-IDF features and compared with 5-fold
-cross-validation:
+---
 
-| Model | Notes |
-|---|---|
-| Multinomial Naive Bayes | Fast, strong baseline for text |
-| Logistic Regression | Linear, well-calibrated probabilities |
-| Linear SVM (calibrated) | Wrapped in `CalibratedClassifierCV` for confidence scores |
+## 📂 Dataset
 
-The best-performing model is selected automatically by macro F1 score.
-
-### 5. Evaluation
-Accuracy, precision/recall/F1 per class, and a confusion matrix heatmap.
-
-### 6. Context-aware priority layer
-Category alone doesn't tell you how urgent a message is. Priority is computed as:
-
-- **Base priority by category** — `Billing` and `Technical Support` start higher than
-  `General Inquiry`.
-- **Urgency escalation** — messages containing urgency/frustration language ("urgent",
-  "immediately", "unacceptable", "charged twice", "still not"...) get bumped up one
-  priority level, capped at `Critical`.
-- **Confidence fallback** — if the model isn't confident about the category (max
-  predicted probability below a threshold), the message is routed to a **manual
-  triage queue** instead of being auto-assigned, so low-confidence guesses never get
-  silently mis-routed.
-
-### 7. Live stream simulation
-A shuffled batch of held-out test messages (plus a few hand-written urgent examples)
-is fed through the routing function one at a time with simulated arrival latency —
-the same pattern a real consumer reading off a message queue (Kafka / RabbitMQ /
-Kinesis) would run continuously in production. Each message prints its classification,
-confidence, priority, and destination team as it "arrives."
-
-### 8. Live dashboard
-After the stream finishes, two summary charts show message volume per team and per
-priority level.
-
-### 9. Model persistence
-The fitted TF-IDF + classifier pipeline is saved with `joblib` so it can be loaded by
-a real streaming consumer without retraining.
-
-## Results
-
-The best model reached **100% test accuracy**. This is expected rather than a red
-flag: the feedback messages are short, templated, and highly category-distinctive
-(e.g. delivery complaints and billing complaints use almost entirely non-overlapping
-vocabulary), so a linear/Naive Bayes model over TF-IDF features separates them
-perfectly. The interesting behavior to look at isn't the accuracy number — it's the
-stream simulation, where an ambiguous, low-confidence message is correctly deferred
-to manual review instead of being force-classified.
-
-## Tech Stack
-
-- Python, pandas, NumPy
-- scikit-learn (TF-IDF, Naive Bayes, Logistic Regression, Linear SVM, model selection & metrics)
-- matplotlib, seaborn, wordcloud (visualization)
-- joblib (model persistence)
-
-## Project Structure
+Dataset Name:
 
 ```
-.
-├── ML_TASK_4_solution.ipynb     # Full pipeline: EDA -> training -> routing -> stream simulation
-├── customer_feedback.csv        # Dataset (1,000 labeled feedback messages)
-├── feedback_router_model.joblib # Saved trained pipeline (TF-IDF + classifier)
-└── README.md
+customer_feedback.csv
 ```
 
-## How to Run
+Contains:
+
+- 1000 customer feedback messages
+- 5 balanced categories
+- No missing values
+
+Categories include:
+
+- Billing
+- Delivery
+- Product
+- Technical Support
+- General Inquiry
+
+---
+
+## ⚙️ Machine Learning Pipeline
+
+### 1. Data Exploration
+
+- Category Distribution
+- Message Length Analysis
+- Word Clouds
+
+---
+
+### 2. Text Preprocessing
+
+- Lowercase Conversion
+- Remove punctuation
+- Remove extra spaces
+
+---
+
+### 3. Feature Engineering
+
+TF-IDF Vectorizer
+
+Uses:
+
+- Unigrams
+- Bigrams
+
+---
+
+### 4. Model Training
+
+Three ML models were trained.
+
+- Multinomial Naive Bayes
+- Logistic Regression
+- Linear SVM
+
+The best model was automatically selected using Macro F1 Score.
+
+---
+
+### 5. Model Evaluation
+
+Evaluation Metrics:
+
+- Accuracy
+- Precision
+- Recall
+- F1 Score
+- Confusion Matrix
+
+---
+
+### 6. Context-Aware Priority Detection
+
+Priority is assigned based on:
+
+- Feedback category
+- Urgent keywords
+- Prediction confidence
+
+Priority Levels:
+
+- Low
+- Medium
+- High
+- Critical
+
+---
+
+### 7. Real-Time Stream Simulation
+
+Incoming customer messages are processed one by one.
+
+For each message the system predicts:
+
+- Category
+- Confidence Score
+- Priority
+- Destination Team
+
+---
+
+### 8. Live Dashboard
+
+Visualizes:
+
+- Messages routed per department
+- Messages by priority level
+
+---
+
+### 9. Model Saving
+
+The trained pipeline is stored using Joblib.
+
+```
+feedback_router_model.joblib
+```
+
+---
+
+## 🛠️ Technologies Used
+
+- Python
+- Pandas
+- NumPy
+- Scikit-learn
+- Matplotlib
+- Seaborn
+- WordCloud
+- Joblib
+- Jupyter Notebook
+
+---
+
+## 📁 Project Structure
+
+```
+Real-Time-Context-Aware-Text-Classification/
+
+│
+├── ML_TASK_4_solution.ipynb
+├── customer_feedback.csv
+├── feedback_router_model.joblib
+├── README.md
+└── requirements.txt
+```
+
+---
+
+## ▶️ Installation
+
+Clone the repository
 
 ```bash
-pip install pandas numpy scikit-learn matplotlib seaborn wordcloud joblib
+git clone https://github.com/yourusername/Real-Time-Context-Aware-Text-Classification.git
+```
+
+Move into the folder
+
+```bash
+cd Real-Time-Context-Aware-Text-Classification
+```
+
+Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+Run the notebook
+
+```bash
 jupyter notebook ML_TASK_4_solution.ipynb
 ```
 
-Run all cells top to bottom. The last classification cell accepts live input so you
-can test your own feedback message and see it classified and routed on the spot.
+---
 
-To reuse the trained model without retraining:
+## 📈 Results
 
-```python
-import joblib
-model = joblib.load("feedback_router_model.joblib")
-model.predict(["My payment failed and I was charged twice"])
-```
+- High classification accuracy
+- Real-time routing simulation
+- Dynamic priority detection
+- Automatic department assignment
 
-## Future Improvements
+---
 
-- Swap TF-IDF for sentence embeddings (e.g. `sentence-transformers`) if feedback text
-  becomes more varied or informal.
-- Add a feedback loop where manually-triaged "Uncertain" messages are relabeled and
-  used to periodically retrain the model.
-- Connect `route_message()` to an actual message broker (Kafka/RabbitMQ) instead of
-  the in-notebook simulation.
+## 💡 Future Improvements
 
-## Created By
+- Deep Learning models
+- BERT embeddings
+- Kafka integration
+- RabbitMQ streaming
+- Flask/FastAPI deployment
+- Web Dashboard
+- Continuous retraining
 
-**MOHAMED AL ZAMEER NK**
+---
+
+## 👨‍💻 Author
+
+**Mohamed Al Zameer**
+
+AI Developer | Web Developer
+
+GitHub:
+https://github.com/yourusername
+
+LinkedIn:
+https://linkedin.com/in/yourprofile
+
+---
+
+## ⭐ If you found this project useful
+
+Please give this repository a ⭐ on GitHub.
